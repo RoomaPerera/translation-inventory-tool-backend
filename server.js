@@ -1,18 +1,18 @@
-require('dotenv').config()
-
 const express = require('express')
-const mongoose = require('mongoose')
 const cors = require('cors')
+
+const connectDB = require('./config/db');
+const { port } = require('./config');
+
 const auth = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 
-// express app
+//express app
 const app = express()
-app.use(cors());
 
 //middleware
+app.use(cors());
 app.use(express.json())
-
 app.use((req, res, next) => {
     console.log(req.path, req.method)
     next()
@@ -23,13 +23,14 @@ app.use('/api/auth', auth)
 app.use('/api/user', userRoutes)
 
 //connect to db
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
-        //listen for requests
-        app.listen(process.env.PORT, () => {
-            console.log('Connected to the db & Server is running on port', process.env.PORT)
-        })
-    })
-    .catch((error) => {
-        console.log(error)
-    })
+connectDB().then(() => {
+    const server = app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+    process.once('SIGUSR2', () => {
+        server.close(() => process.kill(process.pid, 'SIGUSR2'));
+    });
+    process.on('SIGINT', () => {
+        server.close(() => process.exit(0));
+    });
+});
