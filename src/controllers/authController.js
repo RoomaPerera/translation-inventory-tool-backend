@@ -8,6 +8,7 @@ const {
     verifyToken
 } = require('../utils/jwt');
 const { sendMail } = require('../utils/mailer');
+const { resetPasswordTemplate } = require('../utils/emailTemplates');
 
 // Constants for expiry and messages
 const PASSWORD_RESET_EXPIRY_MINUTES = 15;
@@ -56,12 +57,13 @@ const resetPassword = async (req, res) => {
 
     const resetToken = createShortToken({ id: user._id, role: user.role });
     const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    const html = `
-    <p>Hi ${user.userName},</p>
-    <p>Click the link below to set a new password:</p>
-    <a href="${resetURL}">${resetURL}</a>
-    <p>This link will expire in ${PASSWORD_RESET_EXPIRY_MINUTES} minutes.</p>
-    `;
+
+    const html = resetPasswordTemplate({
+        userName: user.userName,
+        resetURL,
+        expiryMinutes: PASSWORD_RESET_EXPIRY_MINUTES
+    });
+
     await sendMail({
         to: user.email,
         subject: 'Password Reset Link',

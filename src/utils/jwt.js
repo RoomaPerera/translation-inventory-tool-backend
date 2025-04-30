@@ -1,16 +1,17 @@
 const jwt = require('jsonwebtoken');
+const { jwtSecret } = require('../config/config');
 
 function createToken(payload) {
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });;
-};
+    return jwt.sign(payload, jwtSecret, { expiresIn: '2h' });
+}
 
 function verifyToken(token) {
-    return jwt.verify(token, process.env.JWT_SECRET);
-};
+    return jwt.verify(token, jwtSecret);
+}
 
 function createShortToken(payload) {
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '15m' });
-};
+    return jwt.sign(payload, jwtSecret, { expiresIn: '15m' });
+}
 
 module.exports = {
     createToken,

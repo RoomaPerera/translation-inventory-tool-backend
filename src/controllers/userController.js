@@ -5,15 +5,16 @@ const mongoose = require('mongoose');
 
 //Role status constants
 const ROLE_STATUS = {
+    PENDING: 'Pending',
     APPROVED: 'Approved',
     REJECTED: 'Rejected',
 };
 
-// Approve User: toggle a user’s roleStatus
+// Approve or reject a user
 const approveUser = async (req, res) => {
     const { id, approve } = req.body;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ error: 'Invalid User ID' });
+        return res.status(400).json({ error: 'Invalid User ID' });
     };
 
     const user = await User.findById(id);
@@ -31,7 +32,7 @@ const approveUser = async (req, res) => {
     res.status(200).json({ message: `User ${approve ? 'approved' : 'rejected'}` });
 };
 
-// Find users marked as rejected (and still in the 30-day window)
+// List all rejected users within 30-day window
 const getRejectedUsers = async (req, res) => {
     const users = await User.find({
         roleStatus: 'Rejected',
@@ -40,23 +41,23 @@ const getRejectedUsers = async (req, res) => {
     res.status(200).json(users);
 };
 
-// restoreUser: restoring a rejected user by ID
+// Restore a previously rejected user
 const restoreRejectedUser = async (req, res) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ error: 'Invalid User ID' });
+        return res.status(400).json({ error: 'Invalid User ID' });
     };
     const user = await User.findById(id);
     if (!user || user.roleStatus !== 'Rejected') {
         return res.status(404).json({ error: 'No such rejected user' });
     }
-    user.roleStatus = 'Pending';
+    user.roleStatus = ROLE_STATUS.PENDING;
     user.deletedAt = null;
     await user.save();
     res.status(200).json({ message: 'User restored to Pending Approval' });
 };
 
-// delete all the rejected users
+// Permanently delete all rejected users
 const deleteRejectedUsers = async (req, res) => {
     const result = await User.deleteMany({
         roleStatus: 'Rejected',
@@ -65,7 +66,7 @@ const deleteRejectedUsers = async (req, res) => {
     res.status(200).json({ message: `Deleted ${result.deletedCount} rejected user(s).` });
 };
 
-// modifyLanguages: update translator’s assigned languages
+// Update a translator’s languages
 const modifyLanguages = async (req, res) => {
     const { id } = req.params;
     const { languages } = req.body;
@@ -89,20 +90,20 @@ const modifyLanguages = async (req, res) => {
     }
 };
 
-// deleteUser: remove a user by ID
+// Delete a single user by ID
 const deleteUser = async (req, res) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ error: 'Invalid User ID' });
+        return res.status(400).json({ error: 'Invalid User ID' });
     }
     const user = await User.findByIdAndDelete(id);
     if (!user) {
         return res.status(404).json({ error: 'No such user' });
     }
-    res.status(200).json({ mssg: 'User Deleted' });
+    res.status(200).json({ message: 'User Deleted' });
 };
 
-// getUserList: returns list of all users (name & role)
+// List all non-deleted users
 const getUserList = async (req, res) => {
     try {
         const userList = await User.find({ deletedAt: null }, "userName role");
@@ -112,14 +113,11 @@ const getUserList = async (req, res) => {
     }
 };
 
-// filterUserList: list users by role (may return empty array)
+// Filter users by role (non-deleted)
 const filterUserList = async (req, res) => {
     const { role } = req.params
     try {
         const users = await User.find({ role, deletedAt: null }).select('userName');
-        if (!users) {
-            return res.status(404).json({ error: 'No such users' });
-        }
         res.status(200).json(users);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -128,11 +126,11 @@ const filterUserList = async (req, res) => {
 
 module.exports = {
     approveUser,
+    getRejectedUsers,
+    restoreRejectedUser,
+    deleteRejectedUsers,
     modifyLanguages,
     deleteUser,
     getUserList,
-    filterUserList,
-    getRejectedUsers,
-    restoreRejectedUser,
-    deleteRejectedUsers
+    filterUserList
 };

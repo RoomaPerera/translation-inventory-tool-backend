@@ -10,7 +10,7 @@ async function startCronJobs() {
         const result = await User.deleteMany({
             deletedAt: { $lte: cutoff }
         });
-        console.log(`Purged ${result.deletedCount} sdeleted users`);
+        console.log(`Purged ${result.deletedCount} deleted users`);
     })
     console.log('cron job scheduled');
 };
