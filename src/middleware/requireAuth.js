@@ -15,6 +15,9 @@ const requireAuth = async (req, res, next) => {
         const payload = verifyToken(token);
         console.log('Decoded payload:', payload);
         const user = await User.findById(payload.id).select('_id role');
+        if (!user) {
+            return res.status(401).json({ error: 'User not found' });
+        }
         req.user = { id: user._id, role: user.role };
         next();
     } catch (error) {
