@@ -61,7 +61,10 @@ userSchema.statics.register = async function (userName, email, password, role, l
     const hash = await bcrypt.hash(password, salt)
 
     const user = await this.create({
-        userName, email, password: hash, role,
+        userName,
+         email, 
+         password: hash, 
+         role,
         languages: role === "Translator" ? languages : [],
         roleStatus: "Pending"
     })
@@ -76,12 +79,14 @@ userSchema.statics.login = async function (email, password) {
     }
     const user = await this.findOne({ email })
     console.log('Login: Found user?', !!user);
-    console.log('User fetched from DB:', user.email, 'Status:', user.roleStatus);
 
     if (!user) {
         throw Error('Incorrect Email')
     }
+
+    console.log('User fetched from DB:', user.email, 'Status:', user.roleStatus);
     if (user.roleStatus !== 'Approved') {
+        console.log('User login blocked - status not approved');
         throw Error('Not an approved user')
     }
     
@@ -101,7 +106,11 @@ userSchema.statics.updateRoleStatus = async function (userId, newStatus) {
       throw Error("Invalid role status");
     }
   
-    const user = await this.findByIdAndUpdate(userId, { roleStatus: newStatus }, { new: true });
+    const user = await this.findByIdAndUpdate(
+        userId, 
+        { roleStatus: newStatus }, 
+        { new: true }
+    );
     if (!user) {
       throw Error("User not found");
     }
