@@ -1,23 +1,37 @@
-const jwt = require('jsonwebtoken')
-const User = require('../models/User')
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const requireAuth = async (req, res, next) => {
-    //verify authentication
-    const { authorization } = req.headers
+    const { authorization } = req.headers;
 
     if (!authorization) {
-        return res.status(401).json({ mssg: 'Authorization token required' })
+        return res.status(401).json({ mssg: 'Authorization token required' });
     }
-    const token = authorization.split(' ')[1]
+
+    const token = authorization.split(' ')[1];
 
     try {
-        const { id } = jwt.verify(token, process.env.SECRET)
-        req.user = User.findOne({ id }).select('_id')
-        next()
-    } catch (error) {
-        console.log(error)
-        res.status(401).json({ error: 'Request is not Authorized' })
-    }
-}
+        const { id } = jwt.verify(token, process.env.SECRET);
 
-module.exports = requireAuth
+        console.log('Decoded token ID:', id);
+
+        const user = await User.findOne({ _id: id }).select('_id');
+
+        console.log('User:', user);
+
+        if (!user) {
+            return res.status(401).json({ message: 'User not found or unauthorized' });
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error('JWT verification error:', error.message);
+        res.status(401).json({ message: 'Request is not authorized' });
+    }
+};
+
+module.exports = requireAuth;
+
+
+

@@ -2,9 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
 
-const Schema = mongoose.Schema
-
-const userSchema = new Schema({
+const userSchema = new mongoose.Schema({
     userName: {
         type: String,
         required: true
@@ -14,7 +12,8 @@ const userSchema = new Schema({
         required: true,
         unique: true,
         lowercase: true,
-        trim: true
+        trim: true,
+        index: true
     },
     password: {
         type: String,
@@ -36,6 +35,12 @@ const userSchema = new Schema({
     }
 }, { timestamps: true })
 
+userSchema.methods.toJSON = function () {
+    const user = this.toObject();
+    delete user.password; // remove password from the response
+    return user;
+}
+
 //static signup method
 userSchema.statics.register = async function (userName, email, password, role, languages) {
     //validation
@@ -45,10 +50,9 @@ userSchema.statics.register = async function (userName, email, password, role, l
     if (!validator.isEmail(email)) {
         throw Error('Invalid Email')
     }
-    if (!validator.isStrongPassword(password)) {
-        throw Error('Password not strong enough')
-    }
-
+    if (!validator.isStrongPassword(password, { minLength: 8 })) {
+        throw Error('Password must be at least 8 characters and strong');
+      }
     const exists = await this.findOne({ email })
     if (exists) {
         throw Error('Email already in use')
@@ -71,18 +75,39 @@ userSchema.statics.login = async function (email, password) {
         throw Error('All fields must be filled')
     }
     const user = await this.findOne({ email })
+    console.log('Login: Found user?', !!user);
+    console.log('User fetched from DB:', user.email, 'Status:', user.roleStatus);
+
     if (!user) {
         throw Error('Incorrect Email')
     }
     if (user.roleStatus !== 'Approved') {
         throw Error('Not an approved user')
     }
+    
+
     const match = await bcrypt.compare(password, user.password)
+    console.log('Login: Password match?', match);
 
     if (!match) {
         throw Error('Incorrect Password')
     }
     return user
 }
+
+// admin only: approve or reject a user
+userSchema.statics.updateRoleStatus = async function (userId, newStatus) {
+    if (!["Approved", "Rejected"].includes(newStatus)) {
+      throw Error("Invalid role status");
+    }
+  
+    const user = await this.findByIdAndUpdate(userId, { roleStatus: newStatus }, { new: true });
+    if (!user) {
+      throw Error("User not found");
+    }
+  
+    return user;
+  };
+
 
 module.exports = mongoose.model('User', userSchema)
