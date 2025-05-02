@@ -33,8 +33,25 @@ const userSchema = new Schema({
         type: String,
         enum: ["Pending", "Approved", "Rejected"],
         default: "Pending"
+    },
+    // 🔹 ADD THESE FIELDS FOR RESET PASSWORD FUNCTIONALITY
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordOtp: {
+        type: String,
+    },
+    resetPasswordExpires: {
+        type: Date,
     }
+
+    
 }, { timestamps: true })
+
+// Compare Password Method
+userSchema.methods.comparePassword = async function (password) {
+    return await bcrypt.compare(password, this.password)
+}
 
 //static signup method
 userSchema.statics.register = async function (userName, email, password, role, languages) {

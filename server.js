@@ -4,6 +4,8 @@ const cors = require('cors')
 const connectDB = require('./config/db');
 const { port } = require('./config');
 
+
+
 const auth = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 
@@ -21,6 +23,7 @@ app.use((req, res, next) => {
 //routes
 app.use('/api/auth', auth)
 app.use('/api/user', userRoutes)
+
 
 //connect to db
 connectDB().then(() => {
