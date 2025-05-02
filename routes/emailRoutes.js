@@ -6,4 +6,5 @@ const path = require('path');
 
 router.post('/translations', emailController.sendEmail);
 
+
 module.exports = router;

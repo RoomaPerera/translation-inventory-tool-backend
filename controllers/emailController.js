@@ -19,19 +19,19 @@ const sendEmail = async (req, res) => {
         },
     });
 
-    const mailOption = {
+    const mailOptions = {
         from: {
             name: 'GTN COMPANY',
             address: process.env.USER
         },
         to: 'milindahashan50@gmail.com',
-        subject: `Add New Traslation`,
-        text: `Key: ${text} /n Language: ${language}`,
+        subject: `Add New Translation`,
+        text: `Key: ${text} \n Language: ${language}`,
     };
 
     try {
         //send the email
-        const info = await transporter.sendMail(mailOption);
+        const info = await transporter.sendMail(mailOptions);
         console.log('Email sent: ' + info.response);
 
         //save the email details into mongodb
