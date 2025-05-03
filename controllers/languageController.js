@@ -4,18 +4,32 @@ const mongoose = require('mongoose');
 
 // REQ-17: Add New Language
 const addLanguage = async (req, res) => {
+  try {
   const { name, code } = req.body;
 
   if (!name || !code) {
-    return res.status(400).json({ message: 'Name and code are required' });
+    return res.status(400).json({ message: 'Both language name and code are required' });
+  }
+const existingLanguage = await Language.findOne({ 
+  $or: [{ name: name.trim() }, { code: code.trim().toUpperCase() }],
+});
+  if (existingLanguage) { 
+    return res.status(409).json({ message: 'Language with this name or code already exists.' });
   }
 
-  try {
-    const newLanguage = new Language({ name, code });
+    const newLanguage = new Language({ 
+      name: name.trim(), 
+      code: code.trim().toUpperCase() 
+    });
+    
     await newLanguage.save();
-    res.status(201).json({ message: `Language '${name}' added successfully!`, newLanguage });
-  } catch (err) {
-    res.status(500).json({ message: 'Error adding language', error: err.message });
+    res.status(201).json({ message: 'Language added successfully.', language: newLanguage });
+  } catch (error) {
+    console.error('🔥 Error adding language:', error);
+    res.status(500).json({
+      message: 'Error adding language',
+      error: error.message || error,
+    });
   }
 };
 
