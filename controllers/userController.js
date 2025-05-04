@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const Language = require('../models/Language')
 const mongoose = require('mongoose')
 
 // Get all users with 'pending' status
@@ -30,25 +31,51 @@ const approveUser = async (req, res) => {
 
 // Assign languages to user
 const assignLanguages = async (req, res) => {
-    const userId = req.params.id
-    const { languages } = req.body
+    const userId = req.params.id;
+    const { languages } = req.body;
 
     try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Only allow assignment to Translators
+        if (user.role !== 'Translator') {
+            return res.status(400).json({ message: "Languages can only be assigned to Translators." });
+        }
+
+        // Fetch all valid language codes from the Language collection
+        const validLanguages = await Language.find().distinct('code');
+
+        // Check for invalid (not in system) languages
+        const invalidLanguages = languages.filter(lang => !validLanguages.includes(lang))
+        if (invalidLanguages.length > 0) {
+            return res.status(400).json({ message: `Invalid language(s): ${invalidLanguages.join(', ')}` })
+        };
+
+
+        // Check for already assigned languages
+        const alreadyAssigned = languages.filter(lang => user.languages.includes(lang))
+        if (alreadyAssigned.length > 0) {
+            return res.status(400).json({ message: `The following language(s) are already assigned: ${alreadyAssigned.join(', ')}` })
+        }
+
+        // Assign the new languages
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $addToSet: { languages: { $each: languages } } },
             { new: true }
         )
 
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' })
-        }
-
         return res.status(200).json(updatedUser)
+
     } catch (error) {
-        return res.status(500).json({ message: 'Failed to assign languages', error: error.message })
+        return res.status(500).json({ message: "Failed to assign languages", error: error.message });
     }
-}
+};
+
 
 // Modify a user's assigned languages (Fixed)
 const modifyLanguages = async (req, res) => {

@@ -29,7 +29,6 @@ router.get('/getUserList', getUserList)
 // Filter users by role
 router.get('/filterUserList/:role', filterUserList)
 
-
 //Get pending user list
 router.get('/pendingUsers', getPendingUsers)
 
