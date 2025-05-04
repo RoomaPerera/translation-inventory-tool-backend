@@ -46,6 +46,11 @@ const assignLanguages = async (req, res) => {
             return res.status(400).json({ message: "Languages can only be assigned to Translators." });
         }
 
+         // Ensure user is approved
+         if (user.roleStatus !== 'Approved') {
+            return res.status(400).json({ message: 'Languages can only be assigned to approved Translators' })
+        }
+
         // Fetch all valid language codes from the Language collection
         const validLanguages = await Language.find().distinct('code');
 
