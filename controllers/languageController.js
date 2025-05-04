@@ -60,8 +60,8 @@ const updateLanguage = async (req, res) => {
       return res.status(404).json({ message: 'Language not found' });
     }
     res.status(200).json({ message: `Language with id ${id} updated successfully!`, updatedLanguage });
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating language', error: err.message });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update language', error: error.message });
   }
 };
 
