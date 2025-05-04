@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 
 //routes
 app.use('/api/auth', auth);
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/languages', languageRoutes);
 
@@ -47,5 +47,4 @@ console.log('Connecting to:', process.env.MONGO_URI);
 if (!process.env.SECRET) {
     console.error("❌ SECRET is not defined in .env");
     process.exit(1);
-  }
-  
+}

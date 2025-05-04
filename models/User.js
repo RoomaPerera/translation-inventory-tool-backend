@@ -52,7 +52,7 @@ userSchema.statics.register = async function (userName, email, password, role, l
     }
     if (!validator.isStrongPassword(password, { minLength: 8 })) {
         throw Error('Password must be at least 8 characters and strong');
-      }
+    }
     const exists = await this.findOne({ email })
     if (exists) {
         throw Error('Email already in use')
@@ -62,9 +62,9 @@ userSchema.statics.register = async function (userName, email, password, role, l
 
     const user = await this.create({
         userName,
-         email, 
-         password: hash, 
-         role,
+        email,
+        password: hash,
+        role,
         languages: role === "Translator" ? languages : [],
         roleStatus: "Pending"
     })
@@ -89,7 +89,7 @@ userSchema.statics.login = async function (email, password) {
         console.log('User login blocked - status not approved');
         throw Error('Not an approved user')
     }
-    
+
 
     const match = await bcrypt.compare(password, user.password)
     console.log('Login: Password match?', match);
@@ -103,20 +103,20 @@ userSchema.statics.login = async function (email, password) {
 // admin only: approve or reject a user
 userSchema.statics.updateRoleStatus = async function (userId, newStatus) {
     if (!["Approved", "Rejected"].includes(newStatus)) {
-      throw Error("Invalid role status");
+        throw Error("Invalid role status");
     }
-  
+
     const user = await this.findByIdAndUpdate(
-        userId, 
-        { roleStatus: newStatus }, 
+        userId,
+        { roleStatus: newStatus },
         { new: true }
     );
     if (!user) {
-      throw Error("User not found");
+        throw Error("User not found");
     }
-  
+
     return user;
-  };
+};
 
 
 module.exports = mongoose.model('User', userSchema)

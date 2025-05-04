@@ -14,6 +14,9 @@ const languageSchema = new mongoose.Schema({
         trim: true,
         uppercase: true,
     }
-});
+},
+    {
+        timestamps: true,
+    });
 
 module.exports = mongoose.model('Language', languageSchema);

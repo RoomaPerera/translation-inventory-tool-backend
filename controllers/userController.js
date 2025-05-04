@@ -1,23 +1,33 @@
 const User = require('../models/User')
 const mongoose = require('mongoose')
 
+// Get all users with 'pending' status
+const getPendingUsers = async (req, res) => {
+    try {
+        const pendingUsers = await User.find({ roleStatus: 'Pending' });
+        res.status(200).json(pendingUsers);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching pending users.' });
+    }
+};
+
 //Admin approval
 const approveUser = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: 'Invalid User ID' });
+        return res.status(404).json({ message: 'Invalid User ID' });
     }
     try {
-      const user = await User.findByIdAndUpdate(req.params.id, { roleStatus: 'Approved' }, { new: true });
-      if (!user) {
-        return res.status(404).json({ message: 'User not found.' });
-    }
+        const user = await User.findByIdAndUpdate(req.params.id, { roleStatus: 'Approved' }, { new: true });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
 
-    res.status(200).json({ message: 'User approved.', user });
-} catch (error) {
-    res.status(500).json({ message: 'Approval failed.', error: error.message });
-}
-  };
-  
+        res.status(200).json({ message: 'User approved.', user });
+    } catch (error) {
+        res.status(500).json({ message: 'Approval failed.', error: error.message });
+    }
+};
+
 // Assign languages to user
 const assignLanguages = async (req, res) => {
     const userId = req.params.id
@@ -40,7 +50,7 @@ const assignLanguages = async (req, res) => {
     }
 }
 
-// ✅ Modify a user's assigned languages (Fixed)
+// Modify a user's assigned languages (Fixed)
 const modifyLanguages = async (req, res) => {
     const userId = req.params.id;
     const { languages } = req.body;
@@ -77,8 +87,7 @@ const deleteUser = async (req, res) => {
 }
 
 
-
-//getAllUserList
+// Get all users
 const getUserList = async (req, res) => {
     try {
         const userList = await User.find({}, "userName role")
@@ -102,22 +111,13 @@ const filterUserList = async (req, res) => {
     }
 }
 
-// Get all users with 'pending' status
-const getPendingUsers = async (req, res) => {
-    try {
-      const pendingUsers = await User.find({ roleStatus: 'Pending' });
-      res.status(200).json(pendingUsers);
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching pending users.' });
-    }
-  };
 
 module.exports = {
     getPendingUsers,
     approveUser,
+    assignLanguages,
     modifyLanguages,
     deleteUser,
     getUserList,
-    filterUserList,
-    assignLanguages
+    filterUserList
 }
