@@ -1,5 +1,5 @@
 const Translation = require('../models/Translation');
-const mongoose = require('mongoose'); // Fixed spelling (you had "mangoose")
+const mongoose = require('mongoose'); 
 
 // Get all translations
 const getAllTranslations = async (req, res) => {
