@@ -49,7 +49,7 @@ const assignLanguages = async (req, res) => {
          // Ensure user is approved
          if (user.roleStatus !== 'Approved') {
             return res.status(400).json({ message: 'Languages can only be assigned to approved Translators' })
-        }
+        }   
 
         // Fetch all valid language codes from the Language collection
         const validLanguages = await Language.find().distinct('code');
@@ -82,27 +82,45 @@ const assignLanguages = async (req, res) => {
 };
 
 
-// Modify a user's assigned languages (Fixed)
+// Modify a user's assigned languages (replaces the current list)
 const modifyLanguages = async (req, res) => {
     const userId = req.params.id;
     const { languages } = req.body;
 
     try {
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { languages },
-            { new: true }
-        );
-
-        if (!updatedUser) {
+        const user = await User.findById(userId);
+        if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.status(200).json(updatedUser);
+        // Check if user is a Translator
+        if (user.role !== 'Translator') {
+            return res.status(400).json({ message: 'Only translators can have languages assigned' });
+        }
+
+        // Check if user is approved
+        if (user.roleStatus !== 'Approved') {
+            return res.status(400).json({ message: 'Cannot modify languages for unapproved translator' });
+        }
+
+        // Fetch valid language codes from the system
+        const validLanguages = await Language.find({}).distinct('code');
+        const invalidLanguages = languages.filter(lang => !validLanguages.includes(lang));
+
+        if (invalidLanguages.length > 0) {
+            return res.status(400).json({ message: `Invalid language codes: ${invalidLanguages.join(', ')}` });
+        }
+
+        // Replace the user's languages
+        user.languages = languages;
+        await user.save();
+
+        return res.status(200).json({ message: 'Languages updated successfully', user });
     } catch (error) {
-        res.status(500).json({ message: 'Failed to modify languages', error: error.message });
+        return res.status(500).json({ message: 'Failed to update languages', error: error.message });
     }
 };
+
 
 
 //Delete User
