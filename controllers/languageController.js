@@ -1,5 +1,5 @@
 const Language = require('../models/Language');
-const User = require('../models/userModel');
+const User = require('../models/User');
 const mongoose = require('mongoose');
 
 // REQ-17: Add New Language

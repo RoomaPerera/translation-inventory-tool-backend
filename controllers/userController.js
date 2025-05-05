@@ -85,7 +85,7 @@ const assignLanguages = async (req, res) => {
 // Modify a user's assigned languages (replaces the current list)
 const modifyLanguages = async (req, res) => {
     const userId = req.params.id;
-    const { languages } = req.body;
+    const { action, languages, replaceFrom, replaceTo } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -105,16 +105,48 @@ const modifyLanguages = async (req, res) => {
 
         // Fetch valid language codes from the system
         const validLanguages = await Language.find({}).distinct('code');
-        const invalidLanguages = languages.filter(lang => !validLanguages.includes(lang));
 
-        if (invalidLanguages.length > 0) {
-            return res.status(400).json({ message: `Invalid language codes: ${invalidLanguages.join(', ')}` });
+        if (action === 'add') {
+            if (!Array.isArray(languages) || languages.length === 0) {
+                return res.status(400).json({ message: 'Languages to add must be provided in an array' });
+            }
+
+            // Filter invalid codes
+            const invalid = languages.filter(l => !validLanguages.includes(l));
+            if (invalid.length > 0) {
+                return res.status(400).json({ message: `Invalid languages: ${invalid.join(', ')}` });
+            }
+
+           // Add new codes, avoid duplicates
+           const updatedLanguages = new Set(user.languages || []);
+           for (const lang of languages) {
+               updatedLanguages.add(lang);
+           }
+           user.languages = Array.from(updatedLanguages);
+       }
+       else if (action === 'remove') {
+        if (!Array.isArray(languages) || languages.length === 0) {
+            return res.status(400).json({ message: 'Languages to remove must be provided in an array' });
         }
 
-        // Replace the user's languages
-        user.languages = languages;
-        await user.save();
+        user.languages = (user.languages || []).filter(l => !languages.includes(l));
+    }
 
+
+        else if (action === 'replace') {
+            if (!replaceFrom || !replaceTo)
+                return res.status(400).json({ message: 'Both replaceFrom and replaceTo are required for replace action' });
+
+            if (!validLanguages.includes(replaceTo))
+                return res.status(400).json({ message: `Invalid language code: ${replaceTo}` });
+
+            user.languages = (user.languages || []).map(l => l === replaceFrom ? replaceTo : l);
+        }
+        else {
+            return res.status(400).json({ message: 'Invalid action. Use add, remove, or replace' });
+        }
+
+        await user.save();
         return res.status(200).json({ message: 'Languages updated successfully', user });
     } catch (error) {
         return res.status(500).json({ message: 'Failed to update languages', error: error.message });
