@@ -6,10 +6,10 @@ const projectSchema = new mongoose.Schema({
         required: true
     },
     description: String,
-    languages: [{
+    languages: {
         type: [String],
         default: [],
-    }],
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
