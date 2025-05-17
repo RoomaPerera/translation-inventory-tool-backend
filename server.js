@@ -5,6 +5,7 @@ require('dotenv').config()
 const connectDB = require('./config/db');
 const { port } = require('./config');
 
+
 const auth = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 
