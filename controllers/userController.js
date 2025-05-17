@@ -172,7 +172,7 @@ const deleteUser = async (req, res) => {
 // Get all users
 const getUserList = async (req, res) => {
     try {
-        const userList = await User.find({}, "userName role")
+        const userList = await User.find({}, "_id userName email role")
         res.status(200).json(userList)
     } catch (error) {
         res.status(400).json({ error: error.message })
